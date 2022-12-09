@@ -24,15 +24,15 @@ class VirtualKeyboard extends StatefulWidget {
   final double fontSize;
 
   /// The builder function will be called for each Key object.
-  final Widget Function(BuildContext context, VirtualKeyboardKey key) builder;
+  late final Widget Function(BuildContext context, VirtualKeyboardKey key)? builder;
 
   /// Set to true if you want only to show Caps letters.
   final bool alwaysCaps;
 
   VirtualKeyboard(
-      {Key key,
-      @required this.type,
-      @required this.onKeyPress,
+      {Key? key,
+      required this.type,
+      required this.onKeyPress,
       this.builder,
       this.height = _virtualKeyboardDefaultHeight,
       this.textColor = Colors.black,
@@ -48,23 +48,23 @@ class VirtualKeyboard extends StatefulWidget {
 
 /// Holds the state for Virtual Keyboard class.
 class _VirtualKeyboardState extends State<VirtualKeyboard> {
-  VirtualKeyboardType type;
-  Function onKeyPress;
+  late VirtualKeyboardType type;
+  late Function onKeyPress;
   // The builder function will be called for each Key object.
-  Widget Function(BuildContext context, VirtualKeyboardKey key) builder;
-  double height;
-  Color textColor;
-  double fontSize;
-  bool alwaysCaps;
+  Widget Function(BuildContext context, VirtualKeyboardKey key)? builder;
+  late double height;
+  late Color textColor;
+  late double fontSize;
+  late bool alwaysCaps;
   // Text Style for keys.
-  TextStyle textStyle;
+  late TextStyle textStyle;
 
   // True if shift is enabled.
   bool isShiftEnabled = false;
 
   @override
   void didUpdateWidget(Widget oldWidget) {
-    super.didUpdateWidget(oldWidget);
+    super.didUpdateWidget(oldWidget as VirtualKeyboard);
     setState(() {
       type = widget.type;
       onKeyPress = widget.onKeyPress;
@@ -106,7 +106,7 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
 
   Widget _alphanumeric() {
     return Container(
-      height: height,
+      height: height+30.0,
       width: MediaQuery.of(context).size.width,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -170,7 +170,7 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
                 }
               } else {
                 // Call the builder function, so the user can specify custom UI for keys.
-                keyWidget = builder(context, virtualKeyboardKey);
+                keyWidget = builder!(context, virtualKeyboardKey);
 
                 if (keyWidget == null) {
                   throw 'builder function must return Widget';
@@ -188,32 +188,41 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
   }
 
   // True if long press is enabled.
-  bool longPress;
+  late bool longPress;
 
   /// Creates default UI element for keyboard Key.
   Widget _keyboardDefaultKey(VirtualKeyboardKey key) {
     return Expanded(
+      child:Padding(padding: EdgeInsets.all(3.0),
         child: InkWell(
       onTap: () {
         onKeyPress(key);
       },
-      child: Container(
-        height: height / _keyRows.length,
+      child: Ink(
+      
+        decoration: BoxDecoration(
+          color:Color.fromARGB(255, 71, 71, 71),
+          border: Border.all(color: Colors.white),
+          borderRadius: BorderRadius.circular(10.0)
+
+        ),
+        height: (height / _keyRows.length),
         child: Center(
             child: Text(
           alwaysCaps
-              ? key.capsText
-              : (isShiftEnabled ? key.capsText : key.text),
+              ? key.capsText!
+              : (isShiftEnabled ? key.capsText! : key.text!),
           style: textStyle,
         )),
       ),
-    ));
+    )));
   }
 
   /// Creates default UI element for keyboard Action Key.
   Widget _keyboardDefaultActionKey(VirtualKeyboardKey key) {
     // Holds the action key widget.
-    Widget actionKey;
+    late Widget actionKey;
+    Color buttonColor=Color.fromARGB(255, 71, 71, 71);
 
     // Switch the action type to build action Key widget.
     switch (key.action) {
@@ -253,15 +262,25 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
         actionKey = actionKey = Icon(Icons.space_bar, color: textColor);
         break;
       case VirtualKeyboardKeyAction.Return:
-        actionKey = Icon(
+        buttonColor=Color.fromARGB(255, 4, 109, 7);
+        actionKey =
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [Icon(
           Icons.keyboard_return,
           color: textColor,
-        );
+        ),
+        Text(" Send",style:TextStyle(color:Colors.white,fontSize: 17.0,fontWeight: FontWeight.bold))
+        ],);
+         
         break;
     }
 
     return Expanded(
-      child: InkWell(
+      child:
+      Padding(padding: EdgeInsets.all(3.0),child:
+       InkWell(
         onTap: () {
           if (key.action == VirtualKeyboardKeyAction.Shift) {
             if (!alwaysCaps) {
@@ -273,12 +292,19 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
 
           onKeyPress(key);
         },
-        child: Container(
-          alignment: Alignment.center,
+        child: Ink(
+           
+        decoration: BoxDecoration(
+          color: buttonColor,
+          border: Border.all(color: Colors.white),
+          borderRadius: BorderRadius.circular(10.0)
+
+        ),
+          
           height: height / _keyRows.length,
           child: actionKey,
         ),
-      ),
+      ),),
     );
   }
 }
